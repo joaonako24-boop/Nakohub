@@ -1,296 +1,380 @@
 --[[
-███╗   ██╗ █████╗ ██╗  ██╗ ██████╗
-████╗  ██║██╔══██╗██║ ██╔╝██╔═══██╗
-██╔██╗ ██║███████║█████╔╝ ██║   ██║
-██║╚██╗██║██╔══██║██╔═██╗ ██║   ██║
-██║ ╚████║██║  ██║██║  ██╗╚██████╔╝
-╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝
+ ███╗   ██╗ █████╗ ██╗  ██╗ ██████╗
+ ████╗  ██║██╔══██╗██║ ██╔╝██╔═══██╗
+ ██╔██╗ ██║███████║█████╔╝ ██║   ██║
+ ██║╚██╗██║██╔══██║██╔═██╗ ██║   ██║
+ ██║ ╚████║██║  ██║██║  ██╗╚██████╔╝
+ ╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝
 
-Nako Hub 🇧🇷
-Versão Otimizada Delta Executor
+ Nako Hub | BLUE LOCK
+ Estilo Banana Hub
 ]]
 
---// SERVIÇOS
+--////////////////////////////////////////////////////
+-- SERVIÇOS
+--////////////////////////////////////////////////////
+
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local VirtualInputManager = game:GetService("VirtualInputManager")
+local VirtualInputManager =
+    game:GetService("VirtualInputManager")
 
 local LocalPlayer = Players.LocalPlayer
 
---// RAYFIELD NOVO
-local Rayfield = loadstring(game:HttpGet(
-    "https://sirius.menu/rayfield"
+--////////////////////////////////////////////////////
+-- FLUENT UI
+--////////////////////////////////////////////////////
+
+local Fluent = loadstring(game:HttpGet(
+"https://raw.githubusercontent.com/dawid-scripts/Fluent/main/source.lua"
 ))()
 
---// JANELA
-local Window = Rayfield:CreateWindow({
-    Name = "Nako Hub | Blue Lock ⚽",
-    LoadingTitle = "Nako Hub",
-    LoadingSubtitle = "Carregando...",
-    ConfigurationSaving = {
-        Enabled = false
-    },
-    Discord = {
-        Enabled = false
-    },
-    KeySystem = false
+local SaveManager = loadstring(game:HttpGet(
+"https://raw.githubusercontent.com/dawid-scripts/Fluent/main/Addons/SaveManager.lua"
+))()
+
+local InterfaceManager = loadstring(game:HttpGet(
+"https://raw.githubusercontent.com/dawid-scripts/Fluent/main/Addons/InterfaceManager.lua"
+))()
+
+--////////////////////////////////////////////////////
+-- JANELA
+--////////////////////////////////////////////////////
+
+local Window = Fluent:CreateWindow({
+    Title = "Nako Hub | BLUE LOCK",
+    SubTitle = "Edição Egoísta",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 420),
+    Acrylic = true,
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.RightControl
 })
 
---// VARIÁVEIS
-getgenv().AutoChute = false
-getgenv().AutoDrible = false
-getgenv().AutoDefesa = false
-getgenv().AutoPulo = false
+--////////////////////////////////////////////////////
+-- ABAS
+--////////////////////////////////////////////////////
 
-getgenv().HitboxAtiva = false
-getgenv().HitboxInvisivel = false
-getgenv().TamanhoHitbox = 10
+local Tabs = {
+
+    Principal = Window:AddTab({
+        Title = "Atacante",
+        Icon = "goal"
+    }),
+
+    Jogador = Window:AddTab({
+        Title = "Jogador",
+        Icon = "user"
+    }),
+
+    Visual = Window:AddTab({
+        Title = "Visual",
+        Icon = "eye"
+    }),
+
+    Goleiro = Window:AddTab({
+        Title = "Goleiro",
+        Icon = "shield"
+    }),
+
+    Hitbox = Window:AddTab({
+        Title = "Hitbox",
+        Icon = "circle"
+    }),
+
+    Config = Window:AddTab({
+        Title = "Config",
+        Icon = "settings"
+    })
+}
+
+--////////////////////////////////////////////////////
+-- VARIÁVEIS
+--////////////////////////////////////////////////////
+
+shared.AutoChute = false
+shared.AutoDrible = false
+shared.AutoDefesa = false
+
+shared.HitboxBola = false
+shared.TamanhoHitbox = 10
+shared.HitboxInvisivel = false
+
+shared.ImãBola = false
+shared.DistanciaImã = 20
 
 --////////////////////////////////////////////////////
 -- FUNÇÕES
 --////////////////////////////////////////////////////
 
-local function GetCharacter()
+local function Personagem()
     return LocalPlayer.Character
 end
 
-local function GetRoot()
-    local Character = GetCharacter()
+local function Root()
 
-    if Character then
-        return Character:FindFirstChild("HumanoidRootPart")
+    local Char = Personagem()
+
+    if Char then
+        return Char:FindFirstChild("HumanoidRootPart")
     end
 end
 
-local function GetHumanoid()
-    local Character = GetCharacter()
+local function Humanoid()
 
-    if Character then
-        return Character:FindFirstChildOfClass("Humanoid")
+    local Char = Personagem()
+
+    if Char then
+        return Char:FindFirstChildOfClass("Humanoid")
     end
 end
 
--- PROCURA BOLA
-local function GetBall()
+local function PegarBola()
 
     for _,v in pairs(workspace:GetDescendants()) do
 
-        if v:IsA("BasePart") and v.Name:lower():find("ball") then
+        if v:IsA("BasePart") and
+           v.Name:lower():find("ball") then
+
             return v
         end
     end
 end
 
 --////////////////////////////////////////////////////
--- NOTIFICAÇÃO
---////////////////////////////////////////////////////
-
-Rayfield:Notify({
-    Title = "Nako Hub",
-    Content = "Script carregado!",
-    Duration = 5,
-    Image = 4483362458
-})
-
---////////////////////////////////////////////////////
 -- ABA PRINCIPAL
 --////////////////////////////////////////////////////
 
-local Main = Window:CreateTab("⚽ Principal", 4483362458)
-
-Main:CreateSection("Funções")
+Tabs.Principal:AddParagraph({
+    Title = "BLUE LOCK",
+    Content = "Torne-se o atacante egoísta definitivo."
+})
 
 -- AUTO CHUTE
-Main:CreateToggle({
-    Name = "Auto Chute",
-    CurrentValue = false,
-    Flag = "AutoChute",
+Tabs.Principal:AddToggle("AutoChute", {
+    Title = "Auto Chute",
+    Default = false,
+
     Callback = function(Value)
 
-        getgenv().AutoChute = Value
+        shared.AutoChute = Value
 
         task.spawn(function()
 
-            while getgenv().AutoChute do
-                task.wait(0.2)
+            while shared.AutoChute do
+                task.wait(0.15)
 
-                local Root = GetRoot()
-                local Ball = GetBall()
+                local Bola = PegarBola()
+                local HRP = Root()
 
-                if Root and Ball then
+                if Bola and HRP then
 
-                    Root.CFrame = Ball.CFrame * CFrame.new(0,0,2)
+                    HRP.CFrame =
+                        Bola.CFrame * CFrame.new(0,0,2)
 
-                    pcall(function()
+                    VirtualInputManager:SendMouseButtonEvent(
+                        0,0,0,true,game,0
+                    )
 
-                        VirtualInputManager:SendMouseButtonEvent(
-                            0,
-                            0,
-                            0,
-                            true,
-                            game,
-                            0
-                        )
+                    task.wait()
 
-                        task.wait()
-
-                        VirtualInputManager:SendMouseButtonEvent(
-                            0,
-                            0,
-                            0,
-                            false,
-                            game,
-                            0
-                        )
-
-                    end)
+                    VirtualInputManager:SendMouseButtonEvent(
+                        0,0,0,false,game,0
+                    )
                 end
             end
         end)
     end
 })
 
--- TELEPORTAR BOLA
-Main:CreateButton({
-    Name = "Teleportar Para Bola",
-    Callback = function()
-
-        local Root = GetRoot()
-        local Ball = GetBall()
-
-        if Root and Ball then
-            Root.CFrame = Ball.CFrame * CFrame.new(0,0,3)
-        end
-    end
-})
-
 -- AUTO DRIBLE
-Main:CreateToggle({
-    Name = "Auto Drible",
-    CurrentValue = false,
-    Flag = "AutoDrible",
+Tabs.Principal:AddToggle("AutoDrible", {
+    Title = "Auto Drible",
+    Default = false,
+
     Callback = function(Value)
 
-        getgenv().AutoDrible = Value
+        shared.AutoDrible = Value
 
         task.spawn(function()
 
-            while getgenv().AutoDrible do
+            while shared.AutoDrible do
                 task.wait(1)
 
-                pcall(function()
+                VirtualInputManager:SendKeyEvent(
+                    true,
+                    Enum.KeyCode.Q,
+                    false,
+                    game
+                )
 
-                    VirtualInputManager:SendKeyEvent(
-                        true,
-                        Enum.KeyCode.Q,
-                        false,
-                        game
-                    )
+                task.wait(0.1)
 
-                    task.wait(0.1)
-
-                    VirtualInputManager:SendKeyEvent(
-                        false,
-                        Enum.KeyCode.Q,
-                        false,
-                        game
-                    )
-
-                end)
+                VirtualInputManager:SendKeyEvent(
+                    false,
+                    Enum.KeyCode.Q,
+                    false,
+                    game
+                )
             end
         end)
     end
 })
 
---////////////////////////////////////////////////////
--- ABA PLAYER
---////////////////////////////////////////////////////
+-- TELEPORTAR PARA BOLA
+Tabs.Principal:AddButton({
+    Title = "Teleportar Para Bola",
 
-local PlayerTab = Window:CreateTab("🏃 Jogador", 4483362458)
-
-PlayerTab:CreateSection("Player")
-
--- SPEED
-PlayerTab:CreateSlider({
-    Name = "Velocidade",
-    Range = {16,150},
-    Increment = 1,
-    Suffix = "Speed",
-    CurrentValue = 16,
-    Flag = "Speed",
-    Callback = function(Value)
-
-        local Humanoid = GetHumanoid()
-
-        if Humanoid then
-            Humanoid.WalkSpeed = Value
-        end
-    end
-})
-
--- JUMP
-PlayerTab:CreateSlider({
-    Name = "Pulo",
-    Range = {50,250},
-    Increment = 1,
-    Suffix = "Jump",
-    CurrentValue = 50,
-    Flag = "Jump",
-    Callback = function(Value)
-
-        local Humanoid = GetHumanoid()
-
-        if Humanoid then
-            Humanoid.JumpPower = Value
-        end
-    end
-})
-
--- RESET
-PlayerTab:CreateButton({
-    Name = "Resetar",
     Callback = function()
 
-        local Humanoid = GetHumanoid()
+        local Bola = PegarBola()
+        local HRP = Root()
 
-        if Humanoid then
-            Humanoid.WalkSpeed = 16
-            Humanoid.JumpPower = 50
+        if Bola and HRP then
+
+            HRP.CFrame =
+                Bola.CFrame * CFrame.new(0,0,3)
+        end
+    end
+})
+
+-- IMÃ DE BOLA
+Tabs.Principal:AddToggle("ImaBola", {
+    Title = "Imã de Bola",
+    Default = false,
+
+    Callback = function(Value)
+
+        shared.ImãBola = Value
+
+        task.spawn(function()
+
+            while shared.ImãBola do
+                task.wait(0.05)
+
+                local Bola = PegarBola()
+                local HRP = Root()
+
+                if Bola and HRP then
+
+                    local Distancia =
+                        (HRP.Position - Bola.Position).Magnitude
+
+                    if Distancia <= shared.DistanciaImã then
+
+                        Bola.CFrame =
+                            HRP.CFrame * CFrame.new(0,0,-3)
+
+                        Bola.AssemblyLinearVelocity =
+                            Vector3.zero
+
+                        Bola.AssemblyAngularVelocity =
+                            Vector3.zero
+                    end
+                end
+            end
+        end)
+    end
+})
+
+Tabs.Principal:AddSlider("DistanciaIma", {
+    Title = "Distância do Imã",
+    Min = 5,
+    Max = 50,
+    Default = 20,
+    Rounding = 1,
+
+    Callback = function(Value)
+
+        shared.DistanciaImã = Value
+    end
+})
+
+--////////////////////////////////////////////////////
+-- ABA JOGADOR
+--////////////////////////////////////////////////////
+
+Tabs.Jogador:AddSlider("Velocidade", {
+    Title = "Velocidade",
+    Min = 16,
+    Max = 150,
+    Default = 16,
+    Rounding = 1,
+
+    Callback = function(Value)
+
+        local Hum = Humanoid()
+
+        if Hum then
+            Hum.WalkSpeed = Value
+        end
+    end
+})
+
+Tabs.Jogador:AddSlider("Pulo", {
+    Title = "Pulo",
+    Min = 50,
+    Max = 250,
+    Default = 50,
+    Rounding = 1,
+
+    Callback = function(Value)
+
+        local Hum = Humanoid()
+
+        if Hum then
+            Hum.JumpPower = Value
+        end
+    end
+})
+
+Tabs.Jogador:AddButton({
+    Title = "Resetar Status",
+
+    Callback = function()
+
+        local Hum = Humanoid()
+
+        if Hum then
+            Hum.WalkSpeed = 16
+            Hum.JumpPower = 50
         end
     end
 })
 
 --////////////////////////////////////////////////////
--- VISUAL
+-- ABA VISUAL
 --////////////////////////////////////////////////////
 
-local Visual = Window:CreateTab("👁️ Visual", 4483362458)
+Tabs.Visual:AddButton({
+    Title = "ESP da Bola",
 
-Visual:CreateSection("Visual")
-
--- ESP
-Visual:CreateButton({
-    Name = "ESP Bola",
     Callback = function()
 
-        local Ball = GetBall()
+        local Bola = PegarBola()
 
-        if Ball and not Ball:FindFirstChild("NakoESP") then
+        if Bola and
+           not Bola:FindFirstChild("BlueLockESP") then
 
             local Highlight = Instance.new("Highlight")
 
-            Highlight.Name = "NakoESP"
-            Highlight.FillColor = Color3.fromRGB(0,170,255)
-            Highlight.OutlineColor = Color3.fromRGB(255,255,255)
+            Highlight.Name = "BlueLockESP"
+
+            Highlight.FillColor =
+                Color3.fromRGB(0,170,255)
+
+            Highlight.OutlineColor =
+                Color3.fromRGB(255,255,255)
+
             Highlight.FillTransparency = 0.3
-            Highlight.Parent = Ball
+
+            Highlight.Parent = Bola
         end
     end
 })
 
--- FULLBRIGHT
-Visual:CreateButton({
-    Name = "FullBright",
+Tabs.Visual:AddButton({
+    Title = "FullBright",
+
     Callback = function()
 
         game.Lighting.Brightness = 5
@@ -301,99 +385,34 @@ Visual:CreateButton({
 })
 
 --////////////////////////////////////////////////////
--- GOLEIRO
+-- ABA GOLEIRO
 --////////////////////////////////////////////////////
 
-local Goalkeeper = Window:CreateTab("🧤 Goleiro", 4483362458)
+Tabs.Goleiro:AddToggle("AutoDefesa", {
+    Title = "Auto Defesa",
+    Default = false,
 
-Goalkeeper:CreateSection("Defesa")
-
--- AUTO DEFESA
-Goalkeeper:CreateToggle({
-    Name = "Auto Defesa",
-    CurrentValue = false,
-    Flag = "AutoDefesa",
     Callback = function(Value)
 
-        getgenv().AutoDefesa = Value
+        shared.AutoDefesa = Value
 
         task.spawn(function()
 
-            while getgenv().AutoDefesa do
+            while shared.AutoDefesa do
                 task.wait(0.05)
 
-                local Root = GetRoot()
-                local Ball = GetBall()
+                local Bola = PegarBola()
+                local HRP = Root()
 
-                if Root and Ball then
+                if Bola and HRP then
 
-                    local Distance =
-                        (Root.Position - Ball.Position).Magnitude
+                    local Distancia =
+                        (HRP.Position - Bola.Position).Magnitude
 
-                    if Distance <= 25 then
+                    if Distancia <= 25 then
 
-                        Root.CFrame = Ball.CFrame * CFrame.new(0,0,1)
-
-                        pcall(function()
-
-                            VirtualInputManager:SendMouseButtonEvent(
-                                0,
-                                0,
-                                0,
-                                true,
-                                game,
-                                0
-                            )
-
-                            task.wait()
-
-                            VirtualInputManager:SendMouseButtonEvent(
-                                0,
-                                0,
-                                0,
-                                false,
-                                game,
-                                0
-                            )
-
-                        end)
-                    end
-                end
-            end
-        end)
-    end
-})
-
--- AUTO PULO
-Goalkeeper:CreateToggle({
-    Name = "Auto Pulo",
-    CurrentValue = false,
-    Flag = "AutoPulo",
-    Callback = function(Value)
-
-        getgenv().AutoPulo = Value
-
-        task.spawn(function()
-
-            while getgenv().AutoPulo do
-                task.wait(0.1)
-
-                local Root = GetRoot()
-                local Humanoid = GetHumanoid()
-                local Ball = GetBall()
-
-                if Root and Humanoid and Ball then
-
-                    local Distance =
-                        (Root.Position - Ball.Position).Magnitude
-
-                    if Distance <= 15 then
-
-                        if Ball.Position.Y > Root.Position.Y + 3 then
-                            Humanoid:ChangeState(
-                                Enum.HumanoidStateType.Jumping
-                            )
-                        end
+                        HRP.CFrame =
+                            Bola.CFrame * CFrame.new(0,0,1)
                     end
                 end
             end
@@ -402,144 +421,147 @@ Goalkeeper:CreateToggle({
 })
 
 --////////////////////////////////////////////////////
--- HITBOX
+-- ABA HITBOX
 --////////////////////////////////////////////////////
 
-local Hitbox = Window:CreateTab("🥅 Hitbox", 4483362458)
+Tabs.Hitbox:AddToggle("HitboxBola", {
+    Title = "Hitbox da Bola",
+    Default = false,
 
-Hitbox:CreateSection("Hitbox Bola")
-
--- TOGGLE
-Hitbox:CreateToggle({
-    Name = "Hitbox Gigante",
-    CurrentValue = false,
-    Flag = "Hitbox",
     Callback = function(Value)
 
-        getgenv().HitboxAtiva = Value
+        shared.HitboxBola = Value
 
         task.spawn(function()
 
-            while getgenv().HitboxAtiva do
+            while shared.HitboxBola do
                 task.wait(0.1)
 
-                local Ball = GetBall()
+                local Bola = PegarBola()
 
-                if Ball then
+                if Bola then
 
-                    local Existing =
-                        Ball:FindFirstChild("NakoHitbox")
+                    local Existente =
+                        Bola:FindFirstChild("BlueLockHitbox")
 
-                    if not Existing then
+                    if not Existente then
 
                         local Part = Instance.new("Part")
 
-                        Part.Name = "NakoHitbox"
+                        Part.Name = "BlueLockHitbox"
+
                         Part.Size = Vector3.new(
-                            getgenv().TamanhoHitbox,
-                            getgenv().TamanhoHitbox,
-                            getgenv().TamanhoHitbox
+                            shared.TamanhoHitbox,
+                            shared.TamanhoHitbox,
+                            shared.TamanhoHitbox
                         )
 
-                        Part.Transparency = 0.5
-                        Part.Color = Color3.fromRGB(0,170,255)
-                        Part.Material = Enum.Material.Neon
+                        Part.Shape = Enum.PartType.Ball
+
+                        Part.Material =
+                            Enum.Material.Neon
+
+                        Part.Color =
+                            Color3.fromRGB(0,170,255)
+
+                        Part.Transparency =
+                            shared.HitboxInvisivel and 1 or 0.45
+
                         Part.CanCollide = false
                         Part.Massless = true
 
-                        local Weld = Instance.new("WeldConstraint")
-                        Weld.Part0 = Ball
+                        local Weld =
+                            Instance.new("WeldConstraint")
+
+                        Weld.Part0 = Bola
                         Weld.Part1 = Part
                         Weld.Parent = Part
 
-                        Part.CFrame = Ball.CFrame
-                        Part.Parent = Ball
+                        Part.CFrame = Bola.CFrame
+                        Part.Parent = Bola
 
                     else
 
-                        Existing.Size = Vector3.new(
-                            getgenv().TamanhoHitbox,
-                            getgenv().TamanhoHitbox,
-                            getgenv().TamanhoHitbox
+                        Existente.Size = Vector3.new(
+                            shared.TamanhoHitbox,
+                            shared.TamanhoHitbox,
+                            shared.TamanhoHitbox
                         )
 
-                        Existing.Transparency =
-                            getgenv().HitboxInvisivel and 1 or 0.5
+                        Existente.Transparency =
+                            shared.HitboxInvisivel and 1 or 0.45
                     end
                 end
             end
 
-            -- REMOVE
-            local Ball = GetBall()
+            local Bola = PegarBola()
 
-            if Ball then
+            if Bola then
 
-                local HitboxObj =
-                    Ball:FindFirstChild("NakoHitbox")
+                local Hitbox =
+                    Bola:FindFirstChild("BlueLockHitbox")
 
-                if HitboxObj then
-                    HitboxObj:Destroy()
+                if Hitbox then
+                    Hitbox:Destroy()
                 end
             end
         end)
     end
 })
 
--- TAMANHO
-Hitbox:CreateSlider({
-    Name = "Tamanho",
-    Range = {5,50},
-    Increment = 1,
-    Suffix = "Size",
-    CurrentValue = 10,
-    Flag = "Size",
+Tabs.Hitbox:AddSlider("TamanhoHitbox", {
+    Title = "Tamanho da Hitbox",
+    Min = 5,
+    Max = 50,
+    Default = 10,
+    Rounding = 1,
+
     Callback = function(Value)
 
-        getgenv().TamanhoHitbox = Value
+        shared.TamanhoHitbox = Value
     end
 })
 
--- INVISÍVEL
-Hitbox:CreateToggle({
-    Name = "Hitbox Invisível",
-    CurrentValue = false,
-    Flag = "Invisible",
+Tabs.Hitbox:AddToggle("HitboxInvisivel", {
+    Title = "Hitbox Invisível",
+    Default = false,
+
     Callback = function(Value)
 
-        getgenv().HitboxInvisivel = Value
+        shared.HitboxInvisivel = Value
     end
 })
 
 --////////////////////////////////////////////////////
--- INFO
+-- CONFIG
 --////////////////////////////////////////////////////
 
-local Info = Window:CreateTab("⭐ Info", 4483362458)
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
 
-Info:CreateParagraph({
-    Title = "Nako Hub 🇧🇷",
-    Content = "Versão otimizada para Delta Executor"
-})
+SaveManager:IgnoreThemeSettings()
 
-Info:CreateButton({
-    Name = "Copiar Discord",
-    Callback = function()
+InterfaceManager:SetFolder("NakoHub")
+SaveManager:SetFolder("NakoHub/BlueLock")
 
-        if setclipboard then
-            setclipboard("discord.gg/nakohub")
-        end
-    end
-})
+InterfaceManager:BuildInterfaceSection(
+    Tabs.Config
+)
+
+SaveManager:BuildConfigSection(
+    Tabs.Config
+)
 
 --////////////////////////////////////////////////////
--- FINAL
+-- NOTIFICAÇÃO
 --////////////////////////////////////////////////////
 
-Rayfield:Notify({
+Fluent:Notify({
     Title = "Nako Hub",
-    Content = "Hub carregado com sucesso!",
-    Duration = 5,
-    Image = 4483362458
+    Content = "BLUE LOCK carregado com sucesso.",
+    Duration = 5
 })
+
+SaveManager:LoadAutoloadConfig()
 
 print("Nako Hub carregado!")
